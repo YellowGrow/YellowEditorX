@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\YellowEditorX.Core\YellowEditorX.Core.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <AssemblyTitle>YellowEditorX</AssemblyTitle>
+    <Version>1.1.0</Version>
+    <Product>YellowEditorX</Product>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="data\cardinfo_korean.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Resource Include="app.ico" />
+  </ItemGroup>
+
+</Project>
