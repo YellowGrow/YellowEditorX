@@ -201,11 +201,36 @@ public partial class MainWindow : Window
         if (settings.UpdatingTo == null) return;
         string? log = null;
         try { log = File.ReadAllText(UpdateLog).Trim(); } catch { }
-        if (log == "ok") ShowStatus($"YellowEditorX {Short(CurrentVersion)}(으)로 업데이트했어요.");
+        if (log == "ok")
+        {
+            ShowStatus($"YellowEditorX {Short(CurrentVersion)}(으)로 업데이트했어요.");
+            RefreshShellIcons();
+        }
         else Ask("업데이트하지 못해서 이전 버전 그대로예요.\n" + (log ?? "") + "\n\n에디터 폴더에 쓸 수 없는 곳(Program Files 등)이면 다른 폴더로 옮겨 주세요.",
                  Title, MessageBoxButton.OK, MessageBoxImage.Warning);
         settings.UpdatingTo = null;
         settings.Save();
+    }
+
+    int iconRefreshes;
+
+    /// <summary>
+    /// Explorer keeps showing the icon it saw first at a path, so a replaced exe with a new icon looks unchanged
+    /// until the icon cache is read again.
+    /// </summary>
+    void RefreshShellIcons()
+    {
+        iconRefreshes++;
+        if (testAnswers != null) return; // self test: count instead of running it
+        try
+        {
+            Process.Start(new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "ie4uinit.exe"), "-show")
+            {
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            });
+        }
+        catch { }
     }
 
     /// <summary>Looks for a newer release in the background and offers to install it.</summary>

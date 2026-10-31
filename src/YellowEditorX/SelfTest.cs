@@ -451,6 +451,24 @@ public partial class MainWindow
           && model.Races.Any(r => r.Value == shownRace), "the card on screen keeps its race and attribute");
         T(typesChanged, "a changed type list is noticed");
         T(ApplyRemote((fakeStrings, fakeHeader, null), live: true) == 0, "same list again changes nothing");
+
+        // 14d. after a restart by the updater: a good update refreshes the Windows icons, a failed one says so
+        string? oldLog = File.Exists(UpdateLog) ? File.ReadAllText(UpdateLog) : null;
+        Directory.CreateDirectory(UpdateDir);
+        File.WriteAllText(UpdateLog, "ok");
+        settings.UpdatingTo = "9.9.9";
+        Answer();
+        ReportUpdate();
+        T(iconRefreshes == 1 && settings.UpdatingTo == null && testPrompts.Count == 0 && StatusText.Text.Contains("업데이트했어요"),
+          "successful update: status shown, icons refreshed");
+        File.WriteAllText(UpdateLog, "failed: test");
+        settings.UpdatingTo = "9.9.9";
+        Answer(MessageBoxResult.OK);
+        ReportUpdate();
+        T(iconRefreshes == 1 && testPrompts.Count == 1 && testPrompts[0].Contains("failed: test"), "failed update: told, no icon refresh");
+        ReportUpdate();
+        T(iconRefreshes == 1, "nothing to report on a normal start");
+        if (oldLog != null) File.WriteAllText(UpdateLog, oldLog); else File.Delete(UpdateLog);
         model.Setcodes[3].Hex = "";
 
         // 15. settings from the workspace version become the open list
