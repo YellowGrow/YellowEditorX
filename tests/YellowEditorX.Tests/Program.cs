@@ -14,6 +14,21 @@ var info = CardInfo.Load(infoPath);
 Console.WriteLine($"cardinfo: {info.Types.Count} types, {info.Categories.Count} categories, {info.Setnames.Count} setnames, {info.Races.Count} races, {info.Attributes.Count} attributes");
 Check(info.Types.Count > 20 && info.Categories.Count == 32 && info.Setnames.Count > 0, "cardinfo counts");
 
+// Card list type text, including the orica kinds (the types seen in the real DBs and a few made up).
+foreach (var (type, want) in new (long, string)[]
+{
+    (0x21, "효과"), (0x11, "일반"), (0x4021, "토큰"), (0x41, "융합"), (0x2021, "싱크로"), (0x1000021, "펜듈럼/효과"),
+    (0x40000061, "페어링"), (0x40000021, "페어링"), (0x8000061, "액세스"), (0x28000061, "액세스/하이잭"),
+    (0x20000021, "하이잭"), (0x40000063, "페어링"), (0x29, "키"), (0x8029, "키-해금됨"), (0x2029, "싱크로/키"),
+    (0x10000042, "마법·기프트"), (0x10002, "마법·속공"), (0xA, "마법·키"), (0x20004, "함정·지속"),
+})
+{
+    string got = info.TypeText(new Card { Type = type });
+    Check(got == want, $"type text {type:x}: {got} (want {want})");
+}
+var future = CardInfo.Parse(File.ReadAllText(infoPath).Replace("##setname", "0x80000000\t새종류\n##setname"));
+Check(future.TypeText(new Card { Type = 0x80000021 }) == "새종류", $"type text of a type added later: {future.TypeText(new Card { Type = 0x80000021 })}");
+
 string Diff(Card a, Card b)
 {
     var d = new List<string>();

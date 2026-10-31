@@ -16,6 +16,10 @@ public static class CardTypes
     /// <summary>키-해금됨 (custom): the unlocked card of a 키; it is always a 키 too.</summary>
     public const long Unlocked = 0x8000;
 
+    public const long Access = 0x8000000, Hijack = 0x20000000, Pairing = 0x40000000;
+    /// <summary>The orica kinds in the order the card list names them.</summary>
+    public static readonly long[] CustomOrder = { Access, Pairing, Hijack, Gift };
+
     public const long MainTypes = Monster | Spell | Trap;
     public static readonly long[] SpellSubs = { QuickPlay, Continuous, Ritual, Equip, Field, Gift };
     public static readonly long[] TrapSubs = { Continuous, Counter };
