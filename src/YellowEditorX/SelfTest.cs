@@ -191,6 +191,19 @@ public partial class MainWindow
         MainChip("마법").IsChecked = true;
         await Idle();
         Snapshot(outDir, "self_3_spell.png");
+        // 키-해금됨 brings 키 along; taking 키-해금됨 off leaves 키 on.
+        MainChip("몬스터").IsChecked = true;
+        await Idle();
+        Chip("키").IsChecked = false;
+        Chip("키-해금됨").IsChecked = true;
+        await Idle();
+        T(Chip("키").IsChecked == true && (model.ToCard().Type & (CardTypes.Key | CardTypes.Unlocked)) == (CardTypes.Key | CardTypes.Unlocked),
+          "키-해금됨 turns 키 on too");
+        Chip("키-해금됨").IsChecked = false;
+        await Idle();
+        T(Chip("키").IsChecked == true && (model.ToCard().Type & CardTypes.Unlocked) == 0, "키-해금됨 off leaves 키 on");
+        Chip("키").IsChecked = false;
+        Chip("키-해금됨").IsChecked = false;
 
         // 5. duplicate (discarding the edits above), save, picture copied
         Answer(MessageBoxResult.No);

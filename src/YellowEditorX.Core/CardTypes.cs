@@ -13,6 +13,8 @@ public static class CardTypes
     public const long Gift = 0x10000000;
     /// <summary>키 (custom). The unlocked card uses the next code with the locked card as alias, but has its own script.</summary>
     public const long Key = 0x8;
+    /// <summary>키-해금됨 (custom): the unlocked card of a 키; it is always a 키 too.</summary>
+    public const long Unlocked = 0x8000;
 
     public const long MainTypes = Monster | Spell | Trap;
     public static readonly long[] SpellSubs = { QuickPlay, Continuous, Ritual, Equip, Field, Gift };

@@ -161,7 +161,7 @@ public sealed class EditorModel : Notifier
         for (int i = 0; i < Card.StrCount; i++) Strings.Add(new StrSlot(i, OnChanged));
         foreach (var t in info.Types)
             if ((t.Value & CardTypes.MainTypes) == 0 && t.Value != 0 && SubTypes.All(s => s.Value != t.Value))
-                SubTypes.Add(new FlagOption(t.Value, t.Text.Trim(), _ => OnTypeChanged()));
+                SubTypes.Add(new FlagOption(t.Value, t.Text.Trim(), OnSubTypeChanged));
         for (int i = 0; i < 9; i++)
             Markers.Add(new FlagOption(CardTypes.MarkerGrid[i], CardTypes.MarkerArrows[i], _ => OnMarkerChanged()));
         foreach (var c in info.Categories)
@@ -234,6 +234,15 @@ public sealed class EditorModel : Notifier
     #endregion
 
     bool HasSub(long bit) => SubTypes.Any(s => s.Value == bit && s.IsChecked);
+
+    void OnSubTypeChanged(FlagOption o)
+    {
+        // Turning on 키-해금됨 turns on 키 as well; turning it off leaves 키 alone.
+        if (!loading && o.Value == CardTypes.Unlocked && o.IsChecked
+            && SubTypes.FirstOrDefault(s => s.Value == CardTypes.Key) is { IsChecked: false } key)
+            key.IsChecked = true;
+        OnTypeChanged();
+    }
 
     void OnTypeChanged()
     {
