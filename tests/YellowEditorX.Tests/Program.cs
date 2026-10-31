@@ -270,7 +270,7 @@ Check(model.ToSaveCard(new DateTime(2026, 10, 30)).Ot == 0x20, "rule is 0x20");
     // Type names: orica types through the data_manager table, others by bit position, cardinfo name as fallback.
     string th = "#define TYPE_MONSTER 0x1\n#define TYPE_TRAPMONSTER 0x100\n#define TYPE_UNLOCKED 0x00008000\n#define TYPE_ACCESS   0x08000000\n#define TYPE_NEWKIND 0x80000000\n";
     var types = RemoteInfo.ParseBits(th, "TYPE", "!system 1090 액세스X\n!system 1050 몬스터M\n", "{TYPE_ACCESS,  1090},", new[] { new InfoItem(0x80000000, "새 종류 ") });
-    Check(types.Select(t => t.Text).SequenceEqual(new[] { "몬스터M", "해방됨", "액세스X", "새 종류" }), "types named: " + string.Join(",", types.Select(t => t.Text)));
+    Check(types.Select(t => t.Text).SequenceEqual(new[] { "몬스터M", "키-해금됨", "액세스X", "새 종류" }), "types named: " + string.Join(",", types.Select(t => t.Text)));
     var unnamed = RemoteInfo.ParseBits(th, "TYPE");
     Check(unnamed[^1].Text == "TYPE_NEWKIND", "type with no name anywhere shows its define");
     // optional: the real files downloaded next to the cdb copies
