@@ -8,7 +8,8 @@ param(
     [Parameter(Mandatory = $true)][string]$Version,
     [string]$Notes = ""
 )
-$ErrorActionPreference = 'Stop'
+# 'Stop'이면 PowerShell 5.1이 git의 경고 메시지까지 오류로 보고 멈추므로, 각 단계에서 직접 확인합니다.
+$ErrorActionPreference = 'Continue'
 Set-Location $PSScriptRoot
 
 if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw "버전은 1.2.0 같은 형식이어야 해요." }
@@ -16,26 +17,27 @@ $tag = "v$Version"
 if (git tag --list $tag) { throw "$tag 태그가 이미 있어요. 더 높은 버전을 쓰세요." }
 
 # 1. 버전 번호
-$proj = 'src\YellowEditorX\YellowEditorX.csproj'
+$proj = Join-Path $PSScriptRoot 'src\YellowEditorX\YellowEditorX.csproj'
 $text = [IO.File]::ReadAllText($proj)
 $text = [Regex]::Replace($text, '<Version>[^<]*</Version>', "<Version>$Version</Version>")
 [IO.File]::WriteAllText($proj, $text)
 
 # 2. 빌드
 $out = Join-Path $PSScriptRoot 'release\YellowEditorX'
-if (Test-Path (Join-Path $PSScriptRoot 'release')) { Remove-Item (Join-Path $PSScriptRoot 'release') -Recurse -Force }
+if (Test-Path (Join-Path $PSScriptRoot 'release')) { Remove-Item (Join-Path $PSScriptRoot 'release') -Recurse -Force -ErrorAction Stop }
 dotnet publish src\YellowEditorX -c Release -r win-x64 --self-contained false -p:PublishReadyToRun=true -o $out
 if ($LASTEXITCODE -ne 0) { throw "빌드 실패" }
 
 # 3. zip (개인 설정은 넣지 않음)
-Get-ChildItem $out -Recurse -Include settings.json, *.bak | Remove-Item -Force
-if (Test-Path (Join-Path $out 'data\github')) { Remove-Item (Join-Path $out 'data\github') -Recurse -Force }
+Get-ChildItem $out -Recurse -Include settings.json, *.bak | Remove-Item -Force -ErrorAction Stop
+if (Test-Path (Join-Path $out 'data\github')) { Remove-Item (Join-Path $out 'data\github') -Recurse -Force -ErrorAction Stop }
 $zip = Join-Path $PSScriptRoot "release\YellowEditorX-$Version.zip"
-Compress-Archive -Path $out -DestinationPath $zip
+Compress-Archive -Path $out -DestinationPath $zip -ErrorAction Stop
 
 # 4. 커밋, 태그, 릴리스
-git add $proj
-git commit -m "YellowEditorX $Version"
+git add $proj 2>&1 | Out-Null
+git commit -q -m "YellowEditorX $Version" 2>&1 | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "git commit 실패" }
 # git은 gh의 GitHub 로그인을 빌려서 올립니다 (git 설정은 바꾸지 않음).
 git -c credential.helper= -c 'credential.helper=!gh auth git-credential' push origin HEAD
 if ($LASTEXITCODE -ne 0) { throw "git push 실패" }
