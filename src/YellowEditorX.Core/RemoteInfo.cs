@@ -35,8 +35,8 @@ public static class RemoteInfo
         [0x1000] = "번개족", [0x2000] = "드래곤족", [0x4000] = "야수족", [0x8000] = "야수전사족", [0x10000] = "공룡족",
         [0x20000] = "어류족", [0x40000] = "해룡족", [0x80000] = "파충류족", [0x100000] = "사이킥족", [0x200000] = "환신야수족",
         [0x400000] = "창조신족", [0x800000] = "환룡족", [0x1000000] = "사이버스족", [0x2000000] = "환상마족",
-        [0x4000000] = "사이보그족", [0x8000000] = "마법기사족", [0x10000000] = "고룡족", [0x20000000] = "오메가사이킥족",
-        [0x40000000] = "천위족", [0x80000000] = "갤럭시족", [0x4000000000000000] = "요괴족",
+        // CyanPro took out the Rush Duel races and 요괴족 (0x4000000 and up); a race added on those bits
+        // later must not get their old names.
     };
     static readonly Dictionary<long, string> TypeNames = new()
     {

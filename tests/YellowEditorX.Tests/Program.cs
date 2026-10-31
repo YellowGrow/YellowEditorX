@@ -258,7 +258,8 @@ Check(model.ToSaveCard(new DateTime(2026, 10, 30)).Ot == 0x20, "rule is 0x20");
     var sn = RemoteInfo.ParseSetnames("#setnames\n!setname 0x300\t마칭 파이어\n!setname 0x305 벨루티나\r\n!counter 0x91 스피드 카운터\n!system 1093 기프트\n");
     Check(sn.Count == 2 && sn[0] == new InfoItem(0x300, "마칭 파이어") && sn[1] == new InfoItem(0x305, "벨루티나"), "setnames parsed");
     var races = RemoteInfo.ParseBits("#define RACE_WARRIOR      0x1\n#define RACE_YOKAI             0x4000000000000000\n#define RACE_MAX               RACE_GALAXY\n#define RACE_ALL (RACE_WARRIOR)\n#define RACE_X 0x3\n#define ATTRIBUTE_DARK   0x20\n", "RACE");
-    Check(races.Count == 2 && races[0].Text == "전사족" && races[1] == new InfoItem(0x4000000000000000, "요괴족"), "races parsed (single bits only)");
+    // A freed bit (요괴족 is gone from CyanPro) gets no old name: only what strings.conf or the define says.
+    Check(races.Count == 2 && races[0].Text == "전사족" && races[1] == new InfoItem(0x4000000000000000, "RACE_YOKAI"), "races parsed (single bits only)");
     var list = new List<InfoItem> { new(-1, "(정의되지 않음)"), new(0, ""), new(0x300, "옛 이름"), new(0xef3, "결연희"), new(0xef4, "쓰는 중") };
     Check(RemoteInfo.Sync(list, sn, 0xef4) == 3 && list.Select(i => i.Text).SequenceEqual(new[] { "(정의되지 않음)", "", "마칭 파이어", "쓰는 중", "벨루티나" }),
           "setnames synced: renamed, added, removed unless in use: " + string.Join(",", list.Select(i => i.Text)));
@@ -283,7 +284,7 @@ Check(model.ToSaveCard(new DateTime(2026, 10, 30)).Ot == 0x20, "rule is 0x20");
         var ra = RemoteInfo.ParseBits(h, "ATTRIBUTE", s);
         var rt = RemoteInfo.ParseBits(h, "TYPE", s, d);
         Console.WriteLine($"GitHub files: {rs.Count} setnames, {rr.Count} races, {ra.Count} attributes, types: {string.Join(",", rt.Select(t => t.Text))}");
-        Check(rs.Count > 0 && rr.Count >= 32 && ra.Count == 7 && rt.Any(t => t == new InfoItem(0x8000000, "액세스")) && rt.All(t => !t.Text.Contains('_')),
+        Check(rs.Count > 0 && rr.Count >= 26 && rr.All(r => r.Value < 0x4000000) && ra.Count == 7 && rt.Any(t => t == new InfoItem(0x8000000, "액세스")) && rt.All(t => !t.Text.Contains('_')),
               "real GitHub files parsed");
     }
 }
