@@ -36,9 +36,12 @@ Compress-Archive -Path $out -DestinationPath $zip
 # 4. 커밋, 태그, 릴리스
 git add $proj
 git commit -m "YellowEditorX $Version"
-git tag $tag
-git push
-git push origin $tag
+# git은 gh의 GitHub 로그인을 빌려서 올립니다 (git 설정은 바꾸지 않음).
+git -c credential.helper= -c 'credential.helper=!gh auth git-credential' push origin HEAD
+if ($LASTEXITCODE -ne 0) { throw "git push 실패" }
 if ($Notes -eq "") { $Notes = "YellowEditorX $Version" }
-gh release create $tag $zip --title "YellowEditorX $Version" --notes $Notes
+# 태그는 GitHub에서 방금 올린 커밋에 만들어집니다.
+gh release create $tag $zip --target (git rev-parse HEAD) --title "YellowEditorX $Version" --notes $Notes
+if ($LASTEXITCODE -ne 0) { throw "릴리스 만들기 실패" }
+git fetch --tags -q
 Write-Host "올렸어요: $tag ($zip)"
