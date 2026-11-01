@@ -35,7 +35,11 @@ $zip = Join-Path $PSScriptRoot "release\YellowEditorX-$Version.zip"
 Compress-Archive -Path $out -DestinationPath $zip -ErrorAction Stop
 
 # 4. 커밋, 태그, 릴리스
-git add $proj 2>&1 | Out-Null
+# 버전 번호뿐 아니라 고친 소스도 모두 같이 커밋해서, 릴리스 태그가 zip과 같은 코드를 가리키게 합니다.
+# (bin, obj, release, publish 같은 빌드 결과는 .gitignore에 있어서 안 들어갑니다.)
+git add -A 2>&1 | Out-Null
+Write-Host "커밋할 파일:"
+git diff --cached --name-status
 git commit -q -m "YellowEditorX $Version" 2>&1 | Out-Null
 if ($LASTEXITCODE -ne 0) { throw "git commit 실패" }
 # git은 gh의 GitHub 로그인을 빌려서 올립니다 (git 설정은 바꾸지 않음).
