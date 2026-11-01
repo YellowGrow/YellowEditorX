@@ -40,7 +40,6 @@ public partial class MainWindow
 
     TextBox StrBox(int i) => Children<TextBox>(StringsList).ElementAt(i);
     ToggleButton Chip(string text) => Children<ToggleButton>(Editor).First(b => b is not RadioButton && (b.Content as string) == text);
-    RadioButton MainChip(string text) => Children<RadioButton>(Editor).First(b => (b.Content as string) == text);
     static void Press(Button b) => b.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
 
     async Task Select(int index)
@@ -174,28 +173,32 @@ public partial class MainWindow
         Chip("펜듈럼").IsChecked = true;
         await Idle();
         T(ScaleLabel.IsVisible && !MarkerGrid.IsVisible, "pendulum scales visible");
-        T(Chip("기프트").IsVisible && Chip("속공").IsVisible, "every sub type is offered for monsters too");
+        T(string.Join(",", model.SubTypes.Take(4).Select(t => t.Text)) == "몬스터,마법,함정,일반",
+            "몬스터 / 마법 / 함정 are chips before 일반: " + string.Join(",", model.SubTypes.Take(4).Select(t => t.Text)));
         string atkBefore = model.Atk, levelBefore = model.Level;
         long attrBefore = model.Attribute;
-        MainChip("마법").IsChecked = true;
+        Chip("마법").IsChecked = true;
         await Idle();
-        T(AttributeLabel.IsVisible && !ScaleLabel.IsVisible, "spell keeps attribute / race / level / stats, hides scales");
+        T(Chip("몬스터").IsChecked == true && (model.ToCard().Type & (CardTypes.Monster | CardTypes.Spell)) == (CardTypes.Monster | CardTypes.Spell),
+            "몬스터 and 마법 together");
+        Chip("몬스터").IsChecked = false;
+        await Idle();
+        T(AttributeLabel.IsVisible && ScaleLabel.IsVisible && Chip("펜듈럼").IsChecked == true, "spell keeps attribute / stats and its 펜듈럼 scales");
         T(model.Atk == atkBefore && model.Level == levelBefore && model.Attribute == attrBefore && model.ToCard().Atk == CardDb.Read(db, model.Original!.Id)!.Atk,
             "stats kept when switching to spell");
-        T(Chip("속공").IsVisible && Chip("기프트").IsVisible && Chip("튜너").IsVisible && Chip("토큰").IsVisible, "spell offers every sub type");
-        T(Chip("펜듈럼").IsChecked == true, "switching to spell keeps the sub types");
         Chip("펜듈럼").IsChecked = false;
-        Chip("기프트").IsChecked = true;
-        T((model.ToCard().Type & (CardTypes.Spell | CardTypes.Gift)) == (CardTypes.Spell | CardTypes.Gift), "기프트 spell type bits");
-        MainChip("함정").IsChecked = true;
         await Idle();
-        T(AttributeLabel.IsVisible && Chip("기프트").IsVisible && (model.ToCard().Type & CardTypes.Gift) != 0, "trap keeps stats and 기프트");
+        T(!ScaleLabel.IsVisible, "scales go with 펜듈럼");
+        Chip("기프트").IsChecked = true;
+        Chip("함정").IsChecked = true;
+        T((model.ToCard().Type & (CardTypes.MainTypes | CardTypes.Gift)) == (CardTypes.Spell | CardTypes.Trap | CardTypes.Gift), "마법 + 함정 + 기프트 bits");
+        Chip("함정").IsChecked = false;
         Chip("기프트").IsChecked = false;
-        MainChip("마법").IsChecked = true;
         await Idle();
         Snapshot(outDir, "self_3_spell.png");
         // 키-해금됨 brings 키 along; taking 키-해금됨 off leaves 키 on.
-        MainChip("몬스터").IsChecked = true;
+        Chip("몬스터").IsChecked = true;
+        Chip("마법").IsChecked = false;
         await Idle();
         Chip("키").IsChecked = false;
         Chip("키-해금됨").IsChecked = true;

@@ -144,7 +144,7 @@ public sealed class EditorModel : Notifier
     string level = "", lscale = "", rscale = "", atk = "", def = "";
     string maker = "", tags = "", pack = "", number = "", created = "", modified = "";
     List<string> extraFooter = new();
-    long mainType, attribute, race;
+    long attribute, race;
     long extraType, extraCategory, extraLevel, ot = Card.RuleCustom;
     bool loading, isDirty;
     Card baseline = new();
@@ -158,8 +158,9 @@ public sealed class EditorModel : Notifier
     {
         Info = info;
         for (int i = 0; i < Card.StrCount; i++) Strings.Add(new StrSlot(i, OnChanged));
-        foreach (var t in info.Types)
-            if ((t.Value & CardTypes.MainTypes) == 0 && t.Value != 0 && SubTypes.All(s => s.Value != t.Value))
+        // 몬스터, 마법 and 함정 are chips like the rest (first, before 일반) and can be combined freely.
+        foreach (var t in info.Types.Where(t => (t.Value & CardTypes.MainTypes) != 0).Concat(info.Types))
+            if (t.Value != 0 && SubTypes.All(s => s.Value != t.Value))
                 SubTypes.Add(new FlagOption(t.Value, t.Text.Trim(), OnSubTypeChanged));
         for (int i = 0; i < 9; i++)
             Markers.Add(new FlagOption(CardTypes.MarkerGrid[i], CardTypes.MarkerArrows[i], _ => OnMarkerChanged()));
@@ -206,23 +207,10 @@ public sealed class EditorModel : Notifier
         }
     }
 
-    public long MainType
-    {
-        get => mainType;
-        set
-        {
-            // Every sub type can go with every main type (a spell token, say), so switching keeps them all.
-            if (!Set(ref mainType, value)) return;
-            OnTypeChanged();
-        }
-    }
-    public bool IsMonsterType { get => mainType == CardTypes.Monster; set { if (value) MainType = CardTypes.Monster; } }
-    public bool IsSpellType { get => mainType == CardTypes.Spell; set { if (value) MainType = CardTypes.Spell; } }
-    public bool IsTrapType { get => mainType == CardTypes.Trap; set { if (value) MainType = CardTypes.Trap; } }
-
-    public bool IsMonster => mainType == CardTypes.Monster;
-    public bool IsPendulum => IsMonster && HasSub(CardTypes.Pendulum);
-    public bool IsLink => IsMonster && HasSub(CardTypes.Link);
+    public bool IsMonster => HasSub(CardTypes.Monster);
+    // Scales and link markers follow their own chips, whatever else the card is (a 펜듈럼 spell, say).
+    public bool IsPendulum => HasSub(CardTypes.Pendulum);
+    public bool IsLink => HasSub(CardTypes.Link);
     public string LevelLabel => IsLink ? "링크" : HasSub(CardTypes.Xyz) ? "랭크" : "레벨";
     public bool IsDirty { get => isDirty; private set => Set(ref isDirty, value); }
     public bool IsNew => Original == null;
@@ -243,7 +231,6 @@ public sealed class EditorModel : Notifier
 
     void OnTypeChanged()
     {
-        Raise(nameof(IsMonsterType)); Raise(nameof(IsSpellType)); Raise(nameof(IsTrapType));
         Raise(nameof(IsMonster)); Raise(nameof(IsPendulum)); Raise(nameof(IsLink)); Raise(nameof(LevelLabel));
         if (!loading && IsLink) Level = MarkerValue().PopCount().ToString();
         OnChanged();
@@ -293,8 +280,7 @@ public sealed class EditorModel : Notifier
         Modified = c.Modified.Length > 0 ? c.Modified : footer.Modified;
         for (int i = 0; i < Card.StrCount; i++) Strings[i].Text = c.Str[i];
 
-        mainType = CardTypes.MainOf(c.Type);
-        long known = mainType;
+        long known = 0;
         foreach (var s in SubTypes)
         {
             s.SetSilently((c.Type & s.Value) == s.Value);
@@ -307,7 +293,7 @@ public sealed class EditorModel : Notifier
         Attribute = c.Attribute;
         Race = c.Race;
 
-        bool link = c.IsType(CardTypes.Monster) && c.IsType(CardTypes.Link);
+        bool link = c.IsType(CardTypes.Link);
         Level = (c.Level & 0xff) == 0 && !c.IsType(CardTypes.Monster) ? "" : (c.Level & 0xff).ToString();
         LScale = ((c.Level >> 24) & 0xff).ToString();
         RScale = ((c.Level >> 16) & 0xff).ToString();
@@ -328,7 +314,6 @@ public sealed class EditorModel : Notifier
         }
         extraCategory = c.Category & ~knownCat;
 
-        Raise(nameof(MainType));
         OnTypeChanged();
         loading = false;
         baseline = ToCard();
@@ -404,7 +389,7 @@ public sealed class EditorModel : Notifier
             Race = race,
         };
         for (int i = 0; i < Card.StrCount; i++) c.Str[i] = Strings[i].Text;
-        long type = mainType | extraType;
+        long type = extraType;
         foreach (var s in SubTypes) if (s.IsChecked) type |= s.Value;
         c.Type = type;
         long lv = Num(level) & 0xff;

@@ -212,11 +212,6 @@
 
                             <TextBlock Grid.Row="1" Text="종류" VerticalAlignment="Top" Margin="0,5,8,0"/>
                             <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,0,4">
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                    <RadioButton Style="{StaticResource MainChip}" Content="몬스터" IsChecked="{Binding IsMonsterType}"/>
-                                    <RadioButton Style="{StaticResource MainChip}" Content="마법" IsChecked="{Binding IsSpellType}"/>
-                                    <RadioButton Style="{StaticResource MainChip}" Content="함정" IsChecked="{Binding IsTrapType}"/>
-                                </StackPanel>
                                 <ItemsControl ItemsSource="{Binding SubTypes}">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>

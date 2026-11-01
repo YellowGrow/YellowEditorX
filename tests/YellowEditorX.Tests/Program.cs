@@ -20,10 +20,12 @@ foreach (var (type, want) in new (long, string)[]
     (0x21, "몬스터·효과"), (0x11, "몬스터·일반"), (0x4021, "몬스터·토큰"), (0x41, "몬스터·융합"), (0x2021, "몬스터·싱크로"),
     (0x1000021, "몬스터·펜듈럼·효과"), (0x1002021, "몬스터·펜듈럼·싱크로"),
     (0x40000061, "몬스터·페어링"), (0x40000021, "몬스터·페어링"), (0x8000061, "몬스터·액세스"), (0x28000061, "몬스터·액세스·하이잭"),
-    (0x20000021, "몬스터·하이잭"), (0x40000063, "몬스터·페어링"), (0x29, "몬스터·키"), (0x8029, "몬스터·키-해금됨"), (0x2029, "몬스터·싱크로·키"),
+    (0x20000021, "몬스터·하이잭"), (0x29, "몬스터·키"), (0x8029, "몬스터·키-해금됨"), (0x2029, "몬스터·싱크로·키"),
     (0x10021, "몬스터·효과·속공"), (0x40010021, "몬스터·페어링·속공"), (0x10000021, "몬스터·기프트"), (0xA1, "몬스터·의식"),
     (0x10000042, "마법·기프트"), (0x10002, "마법·속공"), (0xA, "마법·키"), (0x20004, "함정·지속"),
     (0x4002, "마법·토큰"), (0x21002, "마법·지속·튜너"), (0x800A, "마법·키-해금됨"), (0x44, "함정·융합"),
+    (0x40000063, "몬스터·마법·페어링"), (0x10023, "몬스터·마법·효과·속공"), (0x30006, "마법·함정·속공·지속"), (0x6, "마법·함정"),
+    (0x0, ""), (0x4000, "토큰"),
 })
 {
     string got = info.TypeText(new Card { Type = type });
@@ -160,13 +162,20 @@ Check(model.IsDirty && model.ToCard().Str[3] == "스트링", "string slot edit")
 model.Strings[3].Text = "";
 Check(!model.IsDirty, "clean after reverting string");
 
-// 4. switching kind keeps every sub type (any sub type goes with any main type, e.g. a spell token)
-model.SubTypes.First(s => s.Value == CardTypes.Tuner).IsChecked = true;
+// 4. 몬스터 / 마법 / 함정 are chips like the rest: they go together and with any other type (e.g. a spell token)
+FlagOption TypeChip(long v) => model.SubTypes.First(s => s.Value == v);
+Check(model.SubTypes.Take(4).Select(s => s.Value).SequenceEqual(new[] { CardTypes.Monster, CardTypes.Spell, CardTypes.Trap, CardTypes.Normal }),
+    "type chips start 몬스터, 마법, 함정, 일반");
+TypeChip(CardTypes.Tuner).IsChecked = true;
 long monsterSubs = model.ToCard().Type & ~CardTypes.Monster;
-model.IsSpellType = true;
+TypeChip(CardTypes.Spell).IsChecked = true;
+Check(model.ToCard().Type == (CardTypes.Monster | CardTypes.Spell | monsterSubs) && model.IsMonster, $"monster + spell: {model.ToCard().Type:x}");
+TypeChip(CardTypes.Monster).IsChecked = false;
 var spell = model.ToCard();
-Check(spell.Type == (CardTypes.Spell | monsterSubs), $"spell type after switch: {spell.Type:x}");
+Check(spell.Type == (CardTypes.Spell | monsterSubs) && !model.IsMonster, $"spell type after switch: {spell.Type:x}");
 foreach (var s in model.SubTypes) s.IsChecked = false;
+Check(model.ToCard().Type == 0, "no type at all");
+TypeChip(CardTypes.Spell).IsChecked = true;
 model.SubTypes.First(s => s.Value == CardTypes.Token).IsChecked = true;
 Check(model.ToCard().Type == (CardTypes.Spell | CardTypes.Token), "spell token");
 model.SubTypes.First(s => s.Value == CardTypes.Token).IsChecked = false;

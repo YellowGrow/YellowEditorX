@@ -82,21 +82,26 @@ public sealed class CardInfo
     string Names(IEnumerable<long> bits, string sep) =>
         string.Join(sep, bits.Select(b => TypeName(b).Trim()).Where(s => s.Length > 0));
 
-    /// <summary>Short type description for the card list, e.g. "몬스터·펜듈럼·효과", "몬스터·페어링", "몬스터·속공" or "마법·속공".</summary>
+    /// <summary>
+    /// Short type description for the card list, e.g. "몬스터·펜듈럼·효과", "몬스터·페어링", "몬스터·속공", "마법·속공"
+    /// or "몬스터·마법·페어링" (몬스터, 마법 and 함정 can go together).
+    /// </summary>
     public string TypeText(Card c)
     {
         var custom = CustomTypes(c);
+        var mains = new[] { CardTypes.Monster, CardTypes.Spell, CardTypes.Trap }.Where(m => c.IsType(m)).ToList();
         if (c.IsType(CardTypes.Monster))
         {
-            var parts = new List<long> { CardTypes.Monster };
-            if (c.IsType(CardTypes.Pendulum)) parts.Add(CardTypes.Pendulum);
+            var parts = new List<long>(mains);
+            int bare = parts.Count;
+            if (c.IsType(CardTypes.Pendulum)) { parts.Add(CardTypes.Pendulum); bare++; }
             // 액세스 and 페어링 cards carry the 융합 bit as well; the orica kind is the one to show then.
             bool oricaKind = custom.Any(b => b != CardTypes.Key && b != CardTypes.Unlocked);
             long[] kinds = { CardTypes.Link, CardTypes.Xyz, CardTypes.Synchro, CardTypes.Fusion, CardTypes.Ritual };
             foreach (var k in kinds)
                 if (c.IsType(k) && !(k == CardTypes.Fusion && oricaKind)) { parts.Add(k); break; }
             parts.AddRange(custom);
-            if (parts.Count == (c.IsType(CardTypes.Pendulum) ? 2 : 1))
+            if (parts.Count == bare)
                 parts.Add(c.IsType(CardTypes.Token) ? CardTypes.Token
                         : c.IsType(CardTypes.Effect) ? CardTypes.Effect : CardTypes.Normal);
             // Spell / trap kinds a monster was given (a 속공 monster, say).
@@ -104,12 +109,12 @@ public sealed class CardInfo
                 if (c.IsType(k) && !parts.Contains(k)) parts.Add(k);
             return Names(parts, "·");
         }
-        long main = CardTypes.MainOf(c.Type);
-        if (main == 0) return "";
-        long[] subs = main == CardTypes.Spell ? CardTypes.SpellSubs : CardTypes.TrapSubs;
-        var shown = new List<long> { main };
-        long sub = subs.FirstOrDefault(k => c.IsType(k));
-        if (sub != 0) shown.Add(sub);
+        var shown = new List<long>(mains);
+        foreach (var subs in new[] { c.IsType(CardTypes.Spell) ? CardTypes.SpellSubs : null, c.IsType(CardTypes.Trap) ? CardTypes.TrapSubs : null })
+        {
+            long sub = subs?.FirstOrDefault(k => c.IsType(k)) ?? 0;
+            if (sub != 0 && !shown.Contains(sub)) shown.Add(sub);
+        }
         shown.AddRange(custom.Where(b => !shown.Contains(b)));
         // Any other type a spell or trap was given (a spell 토큰, say). 기프트 spells carry the 융합 bit, which isn't shown then.
         bool oricaSpell = custom.Any(b => b != CardTypes.Key && b != CardTypes.Unlocked);
