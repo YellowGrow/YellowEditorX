@@ -22,7 +22,7 @@ public abstract class Notifier : INotifyPropertyChanged
 public sealed class FlagOption : Notifier
 {
     readonly Action<FlagOption> changed;
-    bool isChecked, isVisible = true;
+    bool isChecked;
     public long Value { get; }
     public string Text { get; }
     public FlagOption(long value, string text, Action<FlagOption> changed)
@@ -37,7 +37,6 @@ public sealed class FlagOption : Notifier
         set { if (Set(ref isChecked, value)) changed(this); }
     }
     internal void SetSilently(bool v) => Set(ref isChecked, v, nameof(IsChecked));
-    public bool IsVisible { get => isVisible; internal set => Set(ref isVisible, value); }
 }
 
 public sealed class StrSlot : Notifier
@@ -212,10 +211,8 @@ public sealed class EditorModel : Notifier
         get => mainType;
         set
         {
+            // Every sub type can go with every main type (a spell token, say), so switching keeps them all.
             if (!Set(ref mainType, value)) return;
-            // Switching between monster / spell / trap drops the sub types that don't fit the new kind.
-            foreach (var s in SubTypes)
-                if (s.IsChecked && !CardTypes.SubTypeFits(value, s.Value)) s.SetSilently(false);
             OnTypeChanged();
         }
     }
@@ -246,7 +243,6 @@ public sealed class EditorModel : Notifier
 
     void OnTypeChanged()
     {
-        foreach (var s in SubTypes) s.IsVisible = CardTypes.SubTypeFits(mainType, s.Value);
         Raise(nameof(IsMonsterType)); Raise(nameof(IsSpellType)); Raise(nameof(IsTrapType));
         Raise(nameof(IsMonster)); Raise(nameof(IsPendulum)); Raise(nameof(IsLink)); Raise(nameof(LevelLabel));
         if (!loading && IsLink) Level = MarkerValue().PopCount().ToString();

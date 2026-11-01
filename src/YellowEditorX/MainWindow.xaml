@@ -223,8 +223,7 @@
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <ToggleButton Style="{StaticResource Chip}" Content="{Binding Text}" IsChecked="{Binding IsChecked}"
-                                                          Visibility="{Binding IsVisible, Converter={StaticResource Vis}}"/>
+                                            <ToggleButton Style="{StaticResource Chip}" Content="{Binding Text}" IsChecked="{Binding IsChecked}"/>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>

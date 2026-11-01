@@ -23,17 +23,6 @@ public static class CardTypes
     public const long MainTypes = Monster | Spell | Trap;
     public static readonly long[] SpellSubs = { QuickPlay, Continuous, Ritual, Equip, Field, Gift };
     public static readonly long[] TrapSubs = { Continuous, Counter };
-    /// <summary>Bits that only belong to spells or traps, never to monsters.</summary>
-    public const long SpellTrapOnly = QuickPlay | Continuous | Equip | Field | Counter | Gift;
-
-    /// <summary>Which sub-type toggles make sense for the given main type.</summary>
-    public static bool SubTypeFits(long main, long bit)
-    {
-        if ((bit & MainTypes) != 0) return false;
-        if (main == Spell) return Array.IndexOf(SpellSubs, bit) >= 0;
-        if (main == Trap) return Array.IndexOf(TrapSubs, bit) >= 0;
-        return (bit & SpellTrapOnly) == 0;
-    }
 
     public static long MainOf(long type) =>
         (type & Monster) != 0 ? Monster : (type & Spell) != 0 ? Spell : (type & Trap) != 0 ? Trap : 0;

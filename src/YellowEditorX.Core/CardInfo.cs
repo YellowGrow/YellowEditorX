@@ -109,6 +109,12 @@ public sealed class CardInfo
         long sub = subs.FirstOrDefault(k => c.IsType(k));
         if (sub != 0) shown.Add(sub);
         shown.AddRange(custom.Where(b => !shown.Contains(b)));
+        // Any other type a spell or trap was given (a spell 토큰, say). 기프트 spells carry the 융합 bit, which isn't shown then.
+        bool oricaSpell = custom.Any(b => b != CardTypes.Key && b != CardTypes.Unlocked);
+        for (long bit = 1; bit <= CardTypes.Link; bit <<= 1)
+            if (c.IsType(bit) && (bit & (CardTypes.MainTypes | CardTypes.Key | CardTypes.Unlocked)) == 0 && !shown.Contains(bit)
+                && !(bit == CardTypes.Fusion && oricaSpell))
+                shown.Add(bit);
         return Names(shown, "·");
     }
 

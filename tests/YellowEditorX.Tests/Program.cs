@@ -21,6 +21,7 @@ foreach (var (type, want) in new (long, string)[]
     (0x40000061, "페어링"), (0x40000021, "페어링"), (0x8000061, "액세스"), (0x28000061, "액세스/하이잭"),
     (0x20000021, "하이잭"), (0x40000063, "페어링"), (0x29, "키"), (0x8029, "키-해금됨"), (0x2029, "싱크로/키"),
     (0x10000042, "마법·기프트"), (0x10002, "마법·속공"), (0xA, "마법·키"), (0x20004, "함정·지속"),
+    (0x4002, "마법·토큰"), (0x21002, "마법·지속·튜너"), (0x800A, "마법·키-해금됨"), (0x44, "함정·융합"),
 })
 {
     string got = info.TypeText(new Card { Type = type });
@@ -157,12 +158,16 @@ Check(model.IsDirty && model.ToCard().Str[3] == "스트링", "string slot edit")
 model.Strings[3].Text = "";
 Check(!model.IsDirty, "clean after reverting string");
 
-// 4. switching kind drops sub types that don't fit
+// 4. switching kind keeps every sub type (any sub type goes with any main type, e.g. a spell token)
 model.SubTypes.First(s => s.Value == CardTypes.Tuner).IsChecked = true;
+long monsterSubs = model.ToCard().Type & ~CardTypes.Monster;
 model.IsSpellType = true;
 var spell = model.ToCard();
-Check(spell.Type == CardTypes.Spell, $"spell type after switch: {spell.Type:x}");
-Check(model.SubTypes.First(s => s.Value == CardTypes.Tuner).IsVisible == false, "tuner hidden for spell");
+Check(spell.Type == (CardTypes.Spell | monsterSubs), $"spell type after switch: {spell.Type:x}");
+foreach (var s in model.SubTypes) s.IsChecked = false;
+model.SubTypes.First(s => s.Value == CardTypes.Token).IsChecked = true;
+Check(model.ToCard().Type == (CardTypes.Spell | CardTypes.Token), "spell token");
+model.SubTypes.First(s => s.Value == CardTypes.Token).IsChecked = false;
 model.SubTypes.First(s => s.Value == CardTypes.QuickPlay).IsChecked = true;
 Check(model.ToCard().Type == (CardTypes.Spell | CardTypes.QuickPlay), "quick-play spell");
 

@@ -174,7 +174,7 @@ public partial class MainWindow
         Chip("펜듈럼").IsChecked = true;
         await Idle();
         T(ScaleLabel.IsVisible && !MarkerGrid.IsVisible, "pendulum scales visible");
-        T(!Chip("기프트").IsVisible, "기프트 is not offered for monsters");
+        T(Chip("기프트").IsVisible && Chip("속공").IsVisible, "every sub type is offered for monsters too");
         string atkBefore = model.Atk, levelBefore = model.Level;
         long attrBefore = model.Attribute;
         MainChip("마법").IsChecked = true;
@@ -182,12 +182,15 @@ public partial class MainWindow
         T(AttributeLabel.IsVisible && !ScaleLabel.IsVisible, "spell keeps attribute / race / level / stats, hides scales");
         T(model.Atk == atkBefore && model.Level == levelBefore && model.Attribute == attrBefore && model.ToCard().Atk == CardDb.Read(db, model.Original!.Id)!.Atk,
             "stats kept when switching to spell");
-        T(Chip("속공").IsVisible && Chip("기프트").IsVisible && !Chip("튜너").IsVisible, "spell sub types (with 기프트) shown, monster ones hidden");
+        T(Chip("속공").IsVisible && Chip("기프트").IsVisible && Chip("튜너").IsVisible && Chip("토큰").IsVisible, "spell offers every sub type");
+        T(Chip("펜듈럼").IsChecked == true, "switching to spell keeps the sub types");
+        Chip("펜듈럼").IsChecked = false;
         Chip("기프트").IsChecked = true;
         T((model.ToCard().Type & (CardTypes.Spell | CardTypes.Gift)) == (CardTypes.Spell | CardTypes.Gift), "기프트 spell type bits");
         MainChip("함정").IsChecked = true;
         await Idle();
-        T(AttributeLabel.IsVisible && !Chip("기프트").IsVisible && (model.ToCard().Type & CardTypes.Gift) == 0, "trap keeps stats, drops 기프트");
+        T(AttributeLabel.IsVisible && Chip("기프트").IsVisible && (model.ToCard().Type & CardTypes.Gift) != 0, "trap keeps stats and 기프트");
+        Chip("기프트").IsChecked = false;
         MainChip("마법").IsChecked = true;
         await Idle();
         Snapshot(outDir, "self_3_spell.png");
