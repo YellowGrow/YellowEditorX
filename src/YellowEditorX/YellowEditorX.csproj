@@ -11,7 +11,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <AssemblyTitle>YellowEditorX</AssemblyTitle>
-    <Version>1.1.7</Version>
+    <Version>1.1.8</Version>
     <Product>YellowEditorX</Product>
     <ApplicationIcon>app.ico</ApplicationIcon>
   </PropertyGroup>

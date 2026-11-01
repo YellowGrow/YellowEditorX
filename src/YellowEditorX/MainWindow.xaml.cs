@@ -53,6 +53,7 @@ public partial class MainWindow : Window
         DataContext = model;
         model.PropertyChanged += Model_PropertyChanged;
         ApplyZoom(settings.Zoom);
+        settings.MigrateLayout();
         ListColumn.Width = new GridLength(Math.Max(240, settings.ListWidth));
         if (settings.StringsWidth > 0) StringsColumn.Width = new GridLength(settings.StringsWidth, GridUnitType.Star);
         PreviewKeyDown += Window_PreviewKeyDown;

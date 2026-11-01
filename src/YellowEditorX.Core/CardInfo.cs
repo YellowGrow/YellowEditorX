@@ -82,25 +82,27 @@ public sealed class CardInfo
     string Names(IEnumerable<long> bits, string sep) =>
         string.Join(sep, bits.Select(b => TypeName(b).Trim()).Where(s => s.Length > 0));
 
-    /// <summary>Short type description for the card list, e.g. "펜듈럼/효과", "페어링", "액세스/하이잭" or "마법·속공".</summary>
+    /// <summary>Short type description for the card list, e.g. "몬스터·펜듈럼·효과", "몬스터·페어링", "몬스터·속공" or "마법·속공".</summary>
     public string TypeText(Card c)
     {
         var custom = CustomTypes(c);
         if (c.IsType(CardTypes.Monster))
         {
-            var parts = new List<long>();
+            var parts = new List<long> { CardTypes.Monster };
+            if (c.IsType(CardTypes.Pendulum)) parts.Add(CardTypes.Pendulum);
             // 액세스 and 페어링 cards carry the 융합 bit as well; the orica kind is the one to show then.
             bool oricaKind = custom.Any(b => b != CardTypes.Key && b != CardTypes.Unlocked);
             long[] kinds = { CardTypes.Link, CardTypes.Xyz, CardTypes.Synchro, CardTypes.Fusion, CardTypes.Ritual };
             foreach (var k in kinds)
                 if (c.IsType(k) && !(k == CardTypes.Fusion && oricaKind)) { parts.Add(k); break; }
             parts.AddRange(custom);
-            if (parts.Count == 0)
+            if (parts.Count == (c.IsType(CardTypes.Pendulum) ? 2 : 1))
                 parts.Add(c.IsType(CardTypes.Token) ? CardTypes.Token
                         : c.IsType(CardTypes.Effect) ? CardTypes.Effect : CardTypes.Normal);
-            string s = Names(parts, "/");
-            if (c.IsType(CardTypes.Pendulum)) s = TypeName(CardTypes.Pendulum).Trim() + "/" + s;
-            return s;
+            // Spell / trap kinds a monster was given (a 속공 monster, say).
+            foreach (var k in CardTypes.SpellSubs.Concat(CardTypes.TrapSubs))
+                if (c.IsType(k) && !parts.Contains(k)) parts.Add(k);
+            return Names(parts, "·");
         }
         long main = CardTypes.MainOf(c.Type);
         if (main == 0) return "";

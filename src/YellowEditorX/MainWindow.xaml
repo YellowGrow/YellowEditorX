@@ -41,7 +41,7 @@
 
         <Grid x:Name="Main" Margin="10">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition x:Name="ListColumn" Width="430" MinWidth="260"/>
+                <ColumnDefinition x:Name="ListColumn" Width="470" MinWidth="260"/>
                 <ColumnDefinition Width="10"/>
                 <ColumnDefinition Width="1.25*" MinWidth="520"/>
                 <ColumnDefinition Width="10"/>
@@ -119,7 +119,7 @@
                                 <GridView>
                                     <GridViewColumn Header="코드" Width="84" DisplayMemberBinding="{Binding Code}"/>
                                     <GridViewColumn Header="이름" Width="118" DisplayMemberBinding="{Binding Name}"/>
-                                    <GridViewColumn Header="종류" Width="74" DisplayMemberBinding="{Binding Kind}"/>
+                                    <GridViewColumn Header="종류" Width="112" DisplayMemberBinding="{Binding Kind}"/>
                                     <GridViewColumn Header="레벨" Width="40" DisplayMemberBinding="{Binding LevelText}"/>
                                     <GridViewColumn Header="공 / 수" Width="76" DisplayMemberBinding="{Binding Stats}"/>
                                 </GridView>

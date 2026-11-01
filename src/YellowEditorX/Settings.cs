@@ -14,6 +14,8 @@ public sealed class Settings
     public string? CardInfo { get; set; }
     public double Zoom { get; set; } = 1.0;
     public double ListWidth { get; set; } = 430;
+    /// <summary>Which list layout ListWidth was saved for; see <see cref="MigrateLayout"/>.</summary>
+    public int ListLayout { get; set; }
     public double StringsWidth { get; set; } = 0;
     public bool DeleteWithFiles { get; set; } = true;
     /// <summary>제작자 of the last saved card, filled into new cards.</summary>
@@ -61,6 +63,15 @@ public sealed class Settings
             foreach (var p in ExtraDbs) Add(p);
             ExtraDbs = null;
         }
+    }
+
+    /// <summary>
+    /// 1.1.8 made the 종류 column 38 wider, so the list gets 40 more, for a new settings file and a saved width alike
+    /// (someone who had dragged the list wider keeps that extra width on top).
+    /// </summary>
+    internal void MigrateLayout()
+    {
+        if (ListLayout < 1) { ListWidth += 40; ListLayout = 1; }
     }
 
     public void Add(string path)

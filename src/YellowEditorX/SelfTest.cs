@@ -480,6 +480,17 @@ public partial class MainWindow
         old.MigrateWorkspace();
         T(old.OpenDbs.Count == 16 && old.Workspace == null && old.ExtraDbs == null, $"workspace settings migrated ({old.OpenDbs.Count} cdbs)");
 
+        // 16. the wider 종류 column: a new settings file and a saved older one end up the same, once
+        var fresh = new Settings { ReadOnly = true };
+        fresh.MigrateLayout();
+        var saved = System.Text.Json.JsonSerializer.Deserialize<Settings>("{\"ListWidth\": 430}")!;
+        saved.MigrateLayout();
+        var dragged = System.Text.Json.JsonSerializer.Deserialize<Settings>("{\"ListWidth\": 500}")!;
+        dragged.MigrateLayout(); dragged.MigrateLayout();
+        T(fresh.ListWidth == 470 && saved.ListWidth == 470 && dragged.ListWidth == 540 && dragged.ListLayout == 1,
+            $"list width after the layout change: new {fresh.ListWidth}, saved {saved.ListWidth}, dragged {dragged.ListWidth}");
+        T(Math.Abs(ListColumn.ActualWidth - 470) < 1, $"list starts 470 wide: {ListColumn.ActualWidth}");
+
         model.Load(null);
         testLog.AppendLine(testFailures == 0 ? "SELFTEST ALL PASS" : $"{testFailures} SELFTEST FAILURES");
         return testLog.ToString();
