@@ -18,6 +18,8 @@ public sealed class Settings
     public int ListLayout { get; set; }
     public double StringsWidth { get; set; } = 0;
     public bool DeleteWithFiles { get; set; } = true;
+    /// <summary>The program that opens scripts; null means the Windows default for .lua.</summary>
+    public string? ScriptEditor { get; set; }
     /// <summary>제작자 of the last saved card, filled into new cards.</summary>
     public string? LastMaker { get; set; }
     /// <summary>Read new card groups, races and attributes from the CyanPro GitHub repositories at start.</summary>

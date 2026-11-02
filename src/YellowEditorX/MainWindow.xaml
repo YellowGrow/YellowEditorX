@@ -16,7 +16,17 @@
                     <Button x:Name="DeleteButton" Style="{StaticResource Tool}" Click="Delete_Click" ToolTip="목록에서 선택한 카드 삭제 (Delete)">삭제</Button>
                     <Button x:Name="UndoButton" Style="{StaticResource Tool}" Click="Undo_Click" ToolTip="마지막 저장·삭제·복사 되돌리기 (Ctrl+Z)">↶ 되돌리기</Button>
                     <Rectangle Width="1" Fill="{StaticResource Line}" Margin="8,4"/>
-                    <Button Style="{StaticResource Tool}" Click="Script_Click" ToolTip="스크립트 열기 — 없으면 만듭니다 (Ctrl+L)">스크립트</Button>
+                    <Button x:Name="ScriptButton" Style="{StaticResource Tool}" Margin="0" Click="Script_Click" ToolTip="스크립트 열기 — 없으면 만듭니다 (Ctrl+L). 오른쪽 클릭이나 ▾로 열 프로그램을 바꿔요">스크립트
+                        <Button.ContextMenu>
+                            <ContextMenu x:Name="ScriptMenu" Opened="ScriptMenu_Opened">
+                                <MenuItem x:Name="ScriptEditorItem" IsEnabled="False"/>
+                                <Separator/>
+                                <MenuItem Header="열 프로그램 고르기..." Click="PickScriptEditor_Click"/>
+                                <MenuItem x:Name="ResetScriptEditorItem" Header="Windows 기본 프로그램으로 열기" Click="ResetScriptEditor_Click"/>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
+                    <Button Style="{StaticResource Tool}" Click="ScriptMenuButton_Click" ToolTip="스크립트를 열 프로그램 바꾸기" Padding="4,5">▾</Button>
                     <Button Style="{StaticResource Tool}" Click="ImportImage_Click" ToolTip="카드 이미지 가져오기 (Ctrl+I)">이미지</Button>
                     <Button Style="{StaticResource Tool}" Click="OpenFolder_Click" ToolTip="이 DB가 있는 폴더 열기">폴더</Button>
                 </StackPanel>

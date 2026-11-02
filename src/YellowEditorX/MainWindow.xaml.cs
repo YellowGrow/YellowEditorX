@@ -1010,8 +1010,8 @@ public partial class MainWindow : Window
         try
         {
             string lua = files.EnsureScript(c, out bool created);
-            OpenWithShell(lua);
-            ShowStatus(created ? $"스크립트를 새로 만들어서 열었어요: {Path.GetFileName(lua)}" : $"스크립트 열었어요: {Path.GetFileName(lua)}");
+            string? note = OpenWithShell(lua);
+            ShowStatus((created ? $"스크립트를 새로 만들어서 열었어요: {Path.GetFileName(lua)}" : $"스크립트 열었어요: {Path.GetFileName(lua)}") + note);
         }
         catch (Exception ex)
         {
@@ -1019,8 +1019,20 @@ public partial class MainWindow : Window
         }
     }
 
-    static void OpenWithShell(string path)
+    /// <summary>Opens a script with the program picked in the ▾ menu, or the Windows default; returns a note for the status bar.</summary>
+    string? OpenWithShell(string path)
     {
+        var editor = settings.ScriptEditor;
+        string? note = null;
+        if (!string.IsNullOrEmpty(editor))
+        {
+            if (File.Exists(editor))
+            {
+                Process.Start(new ProcessStartInfo(editor, "\"" + path + "\"") { UseShellExecute = false });
+                return null;
+            }
+            note = $" (고른 프로그램이 없어서 Windows 기본 프로그램으로 열었어요: {editor})";
+        }
         try
         {
             Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
@@ -1030,6 +1042,40 @@ public partial class MainWindow : Window
             // No program is set for .lua files yet.
             Process.Start(new ProcessStartInfo("notepad.exe", "\"" + path + "\"") { UseShellExecute = true });
         }
+        return note;
+    }
+
+    void ScriptMenuButton_Click(object sender, RoutedEventArgs e)
+    {
+        ScriptMenu.PlacementTarget = ScriptButton;
+        ScriptMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+        ScriptMenu.IsOpen = true;
+    }
+
+    void ScriptMenu_Opened(object sender, RoutedEventArgs e)
+    {
+        bool custom = !string.IsNullOrEmpty(settings.ScriptEditor);
+        ScriptEditorItem.Header = custom ? "지금: " + Path.GetFileName(settings.ScriptEditor) : "지금: Windows 기본 프로그램";
+        ScriptEditorItem.ToolTip = custom ? settings.ScriptEditor : null;
+        ResetScriptEditorItem.IsEnabled = custom;
+    }
+
+    void PickScriptEditor_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new OpenFileDialog { Title = "스크립트를 열 프로그램 고르기", Filter = "프로그램|*.exe|모든 파일|*.*" };
+        if (!string.IsNullOrEmpty(settings.ScriptEditor) && Directory.Exists(Path.GetDirectoryName(settings.ScriptEditor)))
+            dlg.InitialDirectory = Path.GetDirectoryName(settings.ScriptEditor);
+        if (dlg.ShowDialog(this) != true) return;
+        settings.ScriptEditor = dlg.FileName;
+        settings.Save();
+        ShowStatus($"이제 스크립트를 {Path.GetFileName(dlg.FileName)}(으)로 열어요.");
+    }
+
+    void ResetScriptEditor_Click(object sender, RoutedEventArgs e)
+    {
+        settings.ScriptEditor = null;
+        settings.Save();
+        ShowStatus("이제 스크립트를 Windows 기본 프로그램으로 열어요.");
     }
 
     void OpenFolder_Click(object sender, RoutedEventArgs e)

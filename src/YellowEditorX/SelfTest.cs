@@ -494,6 +494,19 @@ public partial class MainWindow
             $"list width after the layout change: new {fresh.ListWidth}, saved {saved.ListWidth}, dragged {dragged.ListWidth}");
         T(Math.Abs(ListColumn.ActualWidth - 470) < 1, $"list starts 470 wide: {ListColumn.ActualWidth}");
 
+        // 17. the ▾ menu shows which program opens scripts
+        var editorBefore = settings.ScriptEditor;
+        settings.ScriptEditor = null;
+        ScriptMenuButton_Click(this, new RoutedEventArgs());
+        T(ScriptMenu.IsOpen && (string)ScriptEditorItem.Header == "지금: Windows 기본 프로그램" && !ResetScriptEditorItem.IsEnabled,
+            $"script menu, default: {ScriptEditorItem.Header}");
+        ScriptMenu.IsOpen = false;
+        settings.ScriptEditor = @"C:\Tools\Code.exe";
+        ScriptMenuButton_Click(this, new RoutedEventArgs());
+        T((string)ScriptEditorItem.Header == "지금: Code.exe" && ResetScriptEditorItem.IsEnabled, $"script menu, picked: {ScriptEditorItem.Header}");
+        ScriptMenu.IsOpen = false;
+        settings.ScriptEditor = editorBefore;
+
         model.Load(null);
         testLog.AppendLine(testFailures == 0 ? "SELFTEST ALL PASS" : $"{testFailures} SELFTEST FAILURES");
         return testLog.ToString();
